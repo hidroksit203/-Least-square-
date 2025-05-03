@@ -1,0 +1,91 @@
+# =============================================================================
+# YZM212 Makine Öğrenmesi – 4. Laboratuvar Ödevi
+#
+# Bu Python betiği (script), doğrusal regresyon algoritmasını iki farklı
+# yöntemle uygular:
+#
+# 1. Kapalı Form (En Küçük Kareler Yöntemi - Least Squares Estimation):
+#    - Model parametreleri (β) doğrudan matematiksel olarak hesaplanır.
+#    - Formül: β = (XᵗX)^(-1) Xᵗy
+#    - Numpy kütüphanesi ile matris işlemleri gerçekleştirilir.
+#
+# 2. Scikit-learn Kütüphanesi ile Doğrusal Regresyon:
+#    - LinearRegression sınıfı kullanılarak model eğitilir.
+#    - Parametreler otomatik hesaplanır: model.intercept_, model.coef_
+#
+# Uygulama:
+# - Küçük bir veri seti ile (Yaş → Maaş ilişkisi) çalışılır.
+# - Her iki yöntemin sonuçları yazdırılır ve grafikle görselleştirilir.
+# - Öğrenciye hem teorik hem pratik farkları gözlemleme imkânı sunar.
+#
+# Bu kod ödevin "iki farklı yöntemle model kur ve karşılaştır" gereksinimini
+# doğrudan karşılamaktadır.
+# =============================================================================
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Örnek veri setini oluştur (Yaş - Maaş ilişkisi)
+data = pd.DataFrame({
+    'Age': [22, 25, 30, 35, 40, 45, 50, 55],
+    'Salary': [2500, 2700, 3200, 3800, 4200, 4700, 5200, 5800]
+})
+
+# Yaş sütununu X olarak ayır (bağımsız değişken)
+X = data['Age'].values.reshape(-1, 1)
+
+# Maaş sütununu y olarak ayır (bağımlı değişken)
+y = data['Salary'].values.reshape(-1, 1)
+
+# X matrisine sabit terim için bir sütun (bias) ekle: her satıra 1 eklenir
+X_b = np.hstack([np.ones((X.shape[0], 1)), X])
+
+# En küçük kareler çözümü (normal denklemler): (X^T X)^-1 X^T y
+theta_best = np.linalg.inv(X_b.T.dot(X_b)).dot(X_b.T).dot(y)
+
+# Eğitim verisi üzerinden tahminler yap
+y_pred = X_b.dot(theta_best)
+
+# Modelin bulduğu parametreleri yazdır
+print("β0 (intercept):", theta_best[0][0])  # Sabit terim
+print("β1 (slope):", theta_best[1][0])      # Eğim
+
+# Grafiksel olarak veri ve modelin tahmin doğrusunu çiz
+plt.scatter(X, y, color='blue', label='Gerçek Veri')                 # Veri noktaları
+plt.plot(X, y_pred, color='red', label='Least Squares Tahmin')      # Regresyon doğrusu
+plt.xlabel('Yaş')
+plt.ylabel('Maaş')
+plt.title('Doğrusal Regresyon (Least Squares)')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# =============================================================================
+# İkinci yöntem: scikit-learn ile doğrusal regresyon
+# =============================================================================
+
+from sklearn.linear_model import LinearRegression
+
+# Model nesnesini oluştur
+model = LinearRegression()
+
+# Modeli verilerle eğit (fit)
+model.fit(X, y)
+
+# Eğitim verisi üzerinden tahminler yap
+y_sk_pred = model.predict(X)
+
+# Modelin bulduğu parametreleri yazdır
+print("scikit-learn Intercept (β0):", model.intercept_[0])  # Sabit terim
+print("scikit-learn Coefficient (β1):", model.coef_[0][0])  # Eğim
+
+# Tahmin doğrusunu ve verileri çiz
+plt.scatter(X, y, color='green', label='Gerçek Veri')               # Veri noktaları
+plt.plot(X, y_sk_pred, color='orange', label='Scikit-learn Tahmin') # Regresyon doğrusu
+plt.xlabel('Yaş')
+plt.ylabel('Maaş')
+plt.title('Scikit-learn ile Doğrusal Regresyon')
+plt.legend()
+plt.grid(True)
+plt.show()
